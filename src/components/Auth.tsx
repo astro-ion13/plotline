@@ -40,7 +40,7 @@ export function Auth() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <img 
-            src="https://raw.githubusercontent.com/stackblitz/stackblitz-images/main/plotline-logo.png" 
+            src="dist\assets\plotline-clear-tight.png" 
             alt="Plotline Logo" 
             className="h-16 w-auto"
           />
