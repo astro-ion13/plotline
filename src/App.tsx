@@ -47,11 +47,11 @@ function App() {
             <div className="flex items-center">
               <div className="flex items-center gap-2">
                 <img 
-                  src="https://raw.githubusercontent.com/stackblitz/stackblitz-images/main/plotline-logo.png" 
+                  src="src/assets/plotline-clear-tight.png" 
                   alt="Plotline Logo" 
                   className="h-8 w-auto"
                 />
-                <h1 className="text-xl font-bold text-blue-900">Plotline</h1>
+                <h1 className="text-xl font-bold">Plotline</h1>
               </div>
               <div className="hidden md:flex ml-10 space-x-4">
                 <Link
@@ -172,7 +172,7 @@ function App() {
                 <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                   {showNewStoryForm ? (
                     <div className="mb-8">
-                      <h2 className="text-2xl font-bold text-blue-900 mb-4">Create New Story</h2>
+                      <h2 className="text-2xl font-bold mb-4">Create New Story</h2>
                       <StoryForm 
                         onSuccess={() => {
                           setShowNewStoryForm(false);
@@ -182,7 +182,7 @@ function App() {
                     </div>
                   ) : (
                     <div>
-                      <h2 className="text-2xl font-bold text-blue-900 mb-4">Your Stories</h2>
+                      <h2 className="text-2xl font-bold mb-4">Your Stories</h2>
                       <StoryList key={storyListKey} />
                     </div>
                   )}

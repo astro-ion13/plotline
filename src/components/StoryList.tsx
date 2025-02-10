@@ -168,7 +168,7 @@ export function StoryList() {
       {editingStory && (
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-blue-900">Edit Story</h2>
+            <h2 className="text-2xl font-bold">Edit Story</h2>
             <button
               onClick={() => setEditingStory(null)}
               className="text-gray-600 hover:text-blue-800 transition-colors"
@@ -219,7 +219,7 @@ export function StoryList() {
               {filteredStories.map((story) => (
                 <div key={story.id} className="bg-white rounded-lg shadow-md p-6 border border-blue-100 hover:shadow-lg transition-shadow">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold text-blue-900">{story.title}</h3>
+                    <h3 className="text-xl font-semibold">{story.title}</h3>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingStory(story)}

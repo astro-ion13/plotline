@@ -40,15 +40,15 @@ export function Auth() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <img 
-            src="dist\assets\plotline-clear-tight.png" 
+            src="src\assets\plotline-clear-tight.png" 
             alt="Plotline Logo" 
             className="h-16 w-auto"
           />
         </div>
-        <h1 className="mt-3 text-center text-4xl font-extrabold text-blue-900">
+        <h1 className="mt-3 text-center text-4xl font-extrabold">
           Plotline
         </h1>
-        <p className="mt-2 text-center text-lg text-blue-600">
+        <p className="mt-2 text-center text-lg">
           Your Storytelling Companion
         </p>
         <h2 className="mt-6 text-center text-2xl font-bold text-gray-900">
