@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { LogIn, UserPlus, Loader2 } from 'lucide-react';
+import logo from '../assets/plotline-clear-tight.png';
 
 export function Auth() {
   const [email, setEmail] = useState('');
@@ -40,7 +41,7 @@ export function Auth() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <img 
-            src="src\assets\plotline-clear-tight.png" 
+            src={logo}
             alt="Plotline Logo" 
             className="h-16 w-auto"
           />

@@ -8,6 +8,7 @@ import { Events } from './components/Events';
 import { supabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { PenSquare, BookOpen, Calendar, Menu, X } from 'lucide-react';
+import logo from '../src/assets/plotline-clear-tight.png';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -47,7 +48,7 @@ function App() {
             <div className="flex items-center">
               <div className="flex items-center gap-2">
                 <img 
-                  src="src/assets/plotline-clear-tight.png" 
+                  src={logo} 
                   alt="Plotline Logo" 
                   className="h-8 w-auto"
                 />
