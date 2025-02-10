@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Loader2, Save, Wand2 } from 'lucide-react';
 import { TextAnalysis } from './TextAnalysis';
+import { StickyNotes } from './StickyNotes';
 
 interface Story {
   id: string;
   title: string;
   content: string;
   tags: string[];
-  notes?: string;
 }
 
 interface StoryFormProps {
@@ -27,19 +27,19 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
-  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AIEnhancement | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [storyId, setStoryId] = useState<string | null>(null);
 
   useEffect(() => {
     if (story && mode === 'edit') {
       setTitle(story.title);
       setContent(story.content);
       setTags(story.tags.join(', '));
-      setNotes(story.notes || '');
+      setStoryId(story.id);
     }
   }, [story, mode]);
 
@@ -59,12 +59,12 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
         title,
         content,
         tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
-        notes,
         user_id: user.id,
         updated_at: new Date().toISOString()
       };
 
       let supabaseError;
+      let newStoryId;
 
       if (mode === 'edit' && story) {
         const { error } = await supabase
@@ -73,11 +73,15 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
           .eq('id', story.id)
           .eq('user_id', user.id);
         supabaseError = error;
+        newStoryId = story.id;
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('stories')
-          .insert([storyData]);
+          .insert([storyData])
+          .select()
+          .single();
         supabaseError = error;
+        newStoryId = data?.id;
       }
 
       if (supabaseError) throw supabaseError;
@@ -86,9 +90,9 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
         setTitle('');
         setContent('');
         setTags('');
-        setNotes('');
       }
-      
+
+      setStoryId(newStoryId);
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : `Failed to ${mode} story`);
@@ -119,8 +123,8 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
   };
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-md">
+    <div className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-md border border-blue-100">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700">
             Title *
@@ -131,7 +135,7 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
             placeholder="Enter your story title"
           />
         </div>
@@ -149,7 +153,7 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
               setShowAnalysis(false);
             }}
             rows={6}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
             placeholder="Write your story here..."
           />
           {content.length > 0 && (
@@ -157,7 +161,7 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
               <button
                 type="button"
                 onClick={() => setShowAnalysis(!showAnalysis)}
-                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+                className="px-3 py-1 text-sm text-gray-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
               >
                 {showAnalysis ? 'Hide Analysis' : 'Show Analysis'}
               </button>
@@ -165,7 +169,7 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
                 type="button"
                 onClick={handleEnhanceStory}
                 disabled={isEnhancing}
-                className="px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1 disabled:opacity-50"
+                className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 disabled:opacity-50 transition-colors"
               >
                 <Wand2 className="h-4 w-4" />
                 Enhance Story
@@ -175,7 +179,7 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
         </div>
 
         {showAnalysis && content && (
-          <div className="border border-gray-200 rounded-lg p-4">
+          <div className="border border-blue-100 rounded-lg p-4">
             <h3 className="text-sm font-medium text-gray-700 mb-3">Text Analysis</h3>
             <TextAnalysis text={content} />
           </div>
@@ -183,25 +187,25 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
 
         {isEnhancing && (
           <div className="flex items-center justify-center py-4">
-            <Loader2 className="animate-spin h-6 w-6 text-indigo-600" />
+            <Loader2 className="animate-spin h-6 w-6 text-blue-600" />
             <span className="ml-2 text-sm text-gray-600">Analyzing your story...</span>
           </div>
         )}
 
         {aiSuggestions && (
-          <div className="bg-indigo-50 p-4 rounded-lg space-y-3">
-            <h3 className="font-medium text-indigo-900">AI Suggestions</h3>
+          <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+            <h3 className="font-medium text-blue-900">AI Suggestions</h3>
             <div className="space-y-2">
               <div>
-                <h4 className="text-sm font-medium text-indigo-800">Readability</h4>
+                <h4 className="text-sm font-medium text-blue-800">Readability</h4>
                 <p className="text-sm text-gray-700">{aiSuggestions.readability}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-indigo-800">Grammar & Structure</h4>
+                <h4 className="text-sm font-medium text-blue-800">Grammar & Structure</h4>
                 <p className="text-sm text-gray-700">{aiSuggestions.grammar}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-indigo-800">Emotional Impact</h4>
+                <h4 className="text-sm font-medium text-blue-800">Emotional Impact</h4>
                 <p className="text-sm text-gray-700">{aiSuggestions.emotional}</p>
               </div>
             </div>
@@ -217,29 +221,21 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
             type="text"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
             placeholder="Enter tags separated by commas"
           />
           <p className="mt-1 text-sm text-gray-500">Optional: Separate tags with commas</p>
         </div>
 
-        <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-            Notes
-          </label>
-          <textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            placeholder="Add any additional notes here..."
-          />
-        </div>
-
         {error && (
-          <div className="text-red-600 text-sm">
-            {error}
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
+            <div className="flex">
+              <div className="ml-3">
+                <p className="text-sm text-red-700">
+                  {error}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -247,7 +243,7 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="flex w-full justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
           >
             {loading ? (
               <Loader2 className="animate-spin h-5 w-5" />
@@ -260,6 +256,10 @@ export function StoryForm({ onSuccess, story, mode = 'create' }: StoryFormProps)
           </button>
         </div>
       </form>
+
+      {storyId && (
+        <StickyNotes storyId={storyId} />
+      )}
     </div>
   );
 }

@@ -7,13 +7,14 @@ import { Resources } from './components/Resources';
 import { Events } from './components/Events';
 import { supabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
-import { PenSquare, BookOpen, Calendar } from 'lucide-react';
+import { PenSquare, BookOpen, Calendar, Menu, X } from 'lucide-react';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [showNewStoryForm, setShowNewStoryForm] = useState(false);
   const [storyListKey, setStoryListKey] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -30,62 +31,134 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  const Navigation = () => (
-    <nav className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900">Storytelling App</h1>
-            <div className="ml-10 flex space-x-4">
+  const Navigation = () => {
+    const closeMenu = () => setIsMenuOpen(false);
+
+    return (
+      <nav className="bg-white shadow-sm border-b border-blue-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative flex justify-between h-16">
+            <div className="flex items-center">
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://raw.githubusercontent.com/stackblitz/stackblitz-images/main/plotline-logo.png" 
+                  alt="Plotline Logo" 
+                  className="h-8 w-auto"
+                />
+                <h1 className="text-xl font-bold text-blue-900">Plotline</h1>
+              </div>
+              <div className="hidden md:flex ml-10 space-x-4">
+                <Link
+                  to="/"
+                  className="text-gray-600 hover:text-blue-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Stories
+                </Link>
+                <Link
+                  to="/resources"
+                  className="text-gray-600 hover:text-blue-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <BookOpen className="h-5 w-5 inline-block mr-1" />
+                  Resources
+                </Link>
+                <Link
+                  to="/events"
+                  className="text-gray-600 hover:text-blue-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <Calendar className="h-5 w-5 inline-block mr-1" />
+                  Events
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              {location.pathname === '/' && (
+                <button
+                  onClick={() => setShowNewStoryForm(!showNewStoryForm)}
+                  className="hidden md:flex px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                  <PenSquare className="h-5 w-5 inline-block mr-2" />
+                  {showNewStoryForm ? 'Close Form' : 'New Story'}
+                </button>
+              )}
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="hidden md:flex px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors"
+              >
+                Sign Out
+              </button>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 rounded-md text-gray-600 hover:text-blue-900 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              >
+                {isMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile menu */}
+          <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
+            <div className="px-2 pt-2 pb-3 space-y-1">
               <Link
                 to="/"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                onClick={closeMenu}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-900 hover:bg-blue-50"
               >
                 Stories
               </Link>
               <Link
                 to="/resources"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                onClick={closeMenu}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-900 hover:bg-blue-50"
               >
-                <BookOpen className="h-5 w-5 inline-block mr-1" />
+                <BookOpen className="h-5 w-5 inline-block mr-2" />
                 Resources
               </Link>
               <Link
                 to="/events"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                onClick={closeMenu}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-900 hover:bg-blue-50"
               >
-                <Calendar className="h-5 w-5 inline-block mr-1" />
+                <Calendar className="h-5 w-5 inline-block mr-2" />
                 Events
               </Link>
+              {location.pathname === '/' && (
+                <button
+                  onClick={() => {
+                    setShowNewStoryForm(!showNewStoryForm);
+                    closeMenu();
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-900 hover:bg-blue-50"
+                >
+                  <PenSquare className="h-5 w-5 inline-block mr-2" />
+                  {showNewStoryForm ? 'Close Form' : 'New Story'}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  supabase.auth.signOut();
+                  closeMenu();
+                }}
+                className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:text-red-900 hover:bg-red-50"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            {location.pathname === '/' && (
-              <button
-                onClick={() => setShowNewStoryForm(!showNewStoryForm)}
-                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <PenSquare className="h-5 w-5 inline-block mr-2" />
-                {showNewStoryForm ? 'Close Form' : 'New Story'}
-              </button>
-            )}
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-            >
-              Sign Out
-            </button>
-          </div>
         </div>
-      </div>
-    </nav>
-  );
+      </nav>
+    );
+  };
 
   return (
     <Router>
@@ -94,12 +167,12 @@ function App() {
           path="/"
           element={
             user ? (
-              <div className="min-h-screen bg-gray-100">
+              <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
                 <Navigation />
-                <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                   {showNewStoryForm ? (
                     <div className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-4">Create New Story</h2>
+                      <h2 className="text-2xl font-bold text-blue-900 mb-4">Create New Story</h2>
                       <StoryForm 
                         onSuccess={() => {
                           setShowNewStoryForm(false);
@@ -109,7 +182,7 @@ function App() {
                     </div>
                   ) : (
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Stories</h2>
+                      <h2 className="text-2xl font-bold text-blue-900 mb-4">Your Stories</h2>
                       <StoryList key={storyListKey} />
                     </div>
                   )}
@@ -124,7 +197,7 @@ function App() {
           path="/resources"
           element={
             user ? (
-              <div className="min-h-screen bg-gray-100">
+              <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
                 <Navigation />
                 <Resources />
               </div>
@@ -137,7 +210,7 @@ function App() {
           path="/events"
           element={
             user ? (
-              <div className="min-h-screen bg-gray-100">
+              <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
                 <Navigation />
                 <Events />
               </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Loader2, Book, Calendar, Edit, Search, X } from 'lucide-react';
+import { Loader2, Book, Calendar, Edit, Search, X, Trash2 } from 'lucide-react';
 import { StoryForm } from './StoryForm';
 
 interface Story {
@@ -12,6 +12,39 @@ interface Story {
   created_at: string;
 }
 
+interface DeleteConfirmationProps {
+  story: Story;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function DeleteConfirmation({ story, onConfirm, onCancel }: DeleteConfirmationProps) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Story</h3>
+        <p className="text-gray-600 mb-4">
+          Are you sure you want to delete "{story.title}"? This action cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function StoryList() {
   const [stories, setStories] = useState<Story[]>([]);
   const [filteredStories, setFilteredStories] = useState<Story[]>([]);
@@ -19,6 +52,8 @@ export function StoryList() {
   const [error, setError] = useState<string | null>(null);
   const [editingStory, setEditingStory] = useState<Story | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [storyToDelete, setStoryToDelete] = useState<Story | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchStories();
@@ -64,6 +99,33 @@ export function StoryList() {
     }
   };
 
+  const handleDeleteStory = async (story: Story) => {
+    setDeleteLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { error: deleteError } = await supabase
+        .from('stories')
+        .delete()
+        .eq('id', story.id)
+        .eq('user_id', user.id);
+
+      if (deleteError) throw deleteError;
+
+      setStories(prevStories => prevStories.filter(s => s.id !== story.id));
+      setFilteredStories(prevStories => prevStories.filter(s => s.id !== story.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete story');
+    } finally {
+      setDeleteLoading(false);
+      setStoryToDelete(null);
+    }
+  };
+
   const clearSearch = () => {
     setSearchQuery('');
   };
@@ -71,15 +133,15 @@ export function StoryList() {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
+        <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-red-600 text-center py-8">
-        {error}
+      <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded text-center">
+        <p className="text-red-700">{error}</p>
       </div>
     );
   }
@@ -87,7 +149,7 @@ export function StoryList() {
   if (stories.length === 0) {
     return (
       <div className="text-center py-8">
-        <Book className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+        <Book className="h-12 w-12 mx-auto text-blue-400 mb-4" />
         <p className="text-gray-600">No stories yet. Click "New Story" to start writing!</p>
       </div>
     );
@@ -95,13 +157,21 @@ export function StoryList() {
 
   return (
     <div className="space-y-6">
+      {storyToDelete && (
+        <DeleteConfirmation
+          story={storyToDelete}
+          onConfirm={() => handleDeleteStory(storyToDelete)}
+          onCancel={() => setStoryToDelete(null)}
+        />
+      )}
+
       {editingStory && (
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">Edit Story</h2>
+            <h2 className="text-2xl font-bold text-blue-900">Edit Story</h2>
             <button
               onClick={() => setEditingStory(null)}
-              className="text-gray-600 hover:text-gray-800"
+              className="text-gray-600 hover:text-blue-800 transition-colors"
             >
               Cancel
             </button>
@@ -128,7 +198,7 @@ export function StoryList() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search stories by title, content, tags, or notes..."
-              className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors sm:text-sm"
             />
             {searchQuery && (
               <button
@@ -145,26 +215,36 @@ export function StoryList() {
               <p className="text-gray-600">No stories found matching your search.</p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
               {filteredStories.map((story) => (
-                <div key={story.id} className="bg-white rounded-lg shadow-md p-6">
+                <div key={story.id} className="bg-white rounded-lg shadow-md p-6 border border-blue-100 hover:shadow-lg transition-shadow">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold text-gray-900">{story.title}</h3>
-                    <button
-                      onClick={() => setEditingStory(story)}
-                      className="p-1 text-gray-500 hover:text-indigo-600 transition-colors"
-                      title="Edit story"
-                    >
-                      <Edit className="h-5 w-5" />
-                    </button>
+                    <h3 className="text-xl font-semibold text-blue-900">{story.title}</h3>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditingStory(story)}
+                        className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
+                        title="Edit story"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => setStoryToDelete(story)}
+                        className="p-1 text-gray-500 hover:text-red-600 transition-colors"
+                        title="Delete story"
+                        disabled={deleteLoading}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-gray-600 mb-4 line-clamp-3">{story.content}</p>
                   {story.tags && story.tags.length > 0 && (
-                    <div className="mb-4">
+                    <div className="mb-4 flex flex-wrap">
                       {story.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="inline-block bg-indigo-100 text-indigo-800 text-sm px-2 py-1 rounded-full mr-2 mb-2"
+                          className="inline-block bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full mr-2 mb-2"
                         >
                           {tag}
                         </span>
